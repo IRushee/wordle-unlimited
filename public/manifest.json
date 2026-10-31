@@ -1,0 +1,18 @@
+{
+  "short_name": "Wordle",
+  "name": "Wordle Unlimited & Journey",
+  "description": "Unlimited multi-length word puzzle with levels, stats, and animations",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#121213",
+  "theme_color": "#121213",
+  "display": "standalone",
+  "orientation": "portrait"
+}

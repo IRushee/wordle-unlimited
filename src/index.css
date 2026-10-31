@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-height: 100%;
+  --tile-size: clamp(34px, 7.5vw, 62px);
+  --keyboard-height: clamp(190px, 28vh, 230px);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 3D Flip Card Animation */
+.tile-flip-container {
+  perspective: 1000px;
+}
+
+.tile-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tile-inner.flipped {
+  transform: rotateX(180deg);
+}
+
+.tile-front, .tile-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-back {
+  transform: rotateX(180deg);
+}
+
+/* Row Shake on invalid guess */
+@keyframes shakeRow {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-shake-row {
+  animation: shakeRow 0.5s ease-in-out;
+}
+
+/* Win Wave Bounce */
+@keyframes winBounce {
+  0%, 20% { transform: translateY(0); }
+  40% { transform: translateY(-22px); }
+  50% { transform: translateY(0); }
+  60% { transform: translateY(-8px); }
+  80%, 100% { transform: translateY(0); }
+}
+
+.animate-win-bounce {
+  animation: winBounce 0.8s ease-in-out;
+}
+
+/* Letter Type Pop */
+@keyframes letterPop {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-letter-pop {
+  animation: letterPop 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Key press bounce */
+.key-press-effect:active {
+  transform: scale(0.92);
+  transition: transform 0.05s ease;
+}
+
+/* Safe Area Inset Support for iPhone */
+.safe-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
+}
