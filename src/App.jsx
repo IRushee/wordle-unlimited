@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Award } from 'lucide-react';
+import { Award, RotateCcw } from 'lucide-react';
 import Header from './components/Header';
 import Board from './components/Board';
 import Keyboard from './components/Keyboard';
@@ -55,6 +55,9 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState('IN_PROGRESS'); // 'IN_PROGRESS' | 'WON' | 'LOST'
   const [keyStatuses, setKeyStatuses] = useState({});
   const [hintCount, setHintCount] = useState(0);
+
+  // Buffered input queue during cell-by-cell flip animation
+  const pendingKeysRef = useRef([]);
 
   // Animations & feedback
   const [shakeRowIndex, setShakeRowIndex] = useState(null);
@@ -199,6 +202,7 @@ export default function App() {
     setKeyStatuses({});
     setHintCount(0);
     setTimeLeft(settings.timeAttack ? 90 : null);
+    pendingKeysRef.current = [];
 
     storage.saveGameState(targetMode, effectiveLength, {
       solution: word,
@@ -283,7 +287,14 @@ export default function App() {
   // Handle typing a letter
   const handleKey = useCallback((letter) => {
     if (gameStatus !== 'IN_PROGRESS') return;
-    if (revealingRowIndex !== null) return;
+
+    if (revealingRowIndex !== null) {
+      // Buffer keys typed during the cell-by-cell flip so fast typers never miss letters on the next chance
+      if (pendingKeysRef.current.length < wordLength) {
+        pendingKeysRef.current.push(letter.toUpperCase());
+      }
+      return;
+    }
 
     setCurrentGuess((prev) => {
       if (prev.length >= wordLength) return prev;
@@ -294,14 +305,27 @@ export default function App() {
   // Handle backspace
   const handleBackspace = useCallback(() => {
     if (gameStatus !== 'IN_PROGRESS') return;
-    if (revealingRowIndex !== null) return;
+
+    if (revealingRowIndex !== null) {
+      pendingKeysRef.current.pop();
+      return;
+    }
 
     setCurrentGuess((prev) => prev.slice(0, -1));
   }, [gameStatus, revealingRowIndex]);
 
   // Handle submit guess
   const handleEnter = useCallback(() => {
-    if (gameStatus !== 'IN_PROGRESS') return;
+    // If the game has ended (won or lost after too many hits), pressing Enter starts the next game!
+    if (gameStatus !== 'IN_PROGRESS') {
+      if (mode === 'daily') {
+        setShowStatsModal(true);
+      } else {
+        handleNextWord();
+      }
+      return;
+    }
+
     if (revealingRowIndex !== null) return;
 
     const rowIdx = guesses.length;
@@ -368,15 +392,15 @@ export default function App() {
           }
           return prev;
         });
-      }, c * 300 + 250);
+      }, c * 250 + 250);
     }
 
-    const totalFlipDuration = wordLength * 300 + 250;
+    // Exact duration until the final tile finishes its flip
+    const totalFlipDuration = (wordLength - 1) * 250 + 500;
 
     setTimeout(() => {
       setGuesses(newGuesses);
       setResults(newResults);
-      setCurrentGuess('');
       setRevealingRowIndex(null);
       setRevealingResult(null);
 
@@ -386,6 +410,11 @@ export default function App() {
       // Check win condition
       const won = currentGuess === solution;
       const lost = !won && newGuesses.length >= maxGuesses;
+
+      // Apply any keys buffered during the flip to immediately start the next chance
+      const buffered = pendingKeysRef.current.join('');
+      pendingKeysRef.current = [];
+      setCurrentGuess(won || lost ? '' : buffered);
 
       if (won) {
         setGameStatus('WON');
@@ -488,13 +517,16 @@ export default function App() {
           setShowSettingsModal(false);
           setShowHistoryModal(false);
           setDefinitionWord(null);
+        } else if (e.key === 'Enter' && gameStatus !== 'IN_PROGRESS' && mode !== 'daily') {
+          setShowStatsModal(false);
+          handleNextWord();
         }
         return;
       }
 
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || (e.key === ' ' && gameStatus !== 'IN_PROGRESS')) {
         e.preventDefault();
         handleEnter();
       } else if (e.key === 'Backspace') {
@@ -706,19 +738,30 @@ export default function App() {
         onBackspace={handleBackspace}
         keyStatuses={keyStatuses}
         disabled={gameStatus !== 'IN_PROGRESS' || revealingRowIndex !== null}
+        gameStatus={gameStatus}
+        mode={mode}
         settings={settings}
       />
 
       {/* Game Ended Quick Floating Pill */}
       {gameStatus !== 'IN_PROGRESS' && (
-        <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+        <div className="fixed bottom-[180px] sm:bottom-[210px] left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex items-center gap-2">
           <button
             onClick={() => setShowStatsModal(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm rounded-full shadow-2xl flex items-center gap-2 border border-emerald-400/40 animate-pulse cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            className="px-3.5 py-1.5 bg-zinc-900/95 dark:bg-zinc-800/95 hover:bg-zinc-800 text-white font-bold text-xs rounded-full shadow-2xl flex items-center gap-1.5 border border-zinc-700 cursor-pointer transition-transform hover:scale-105 active:scale-95"
           >
-            <Award className="w-4 h-4 text-amber-300" />
-            <span>{gameStatus === 'WON' ? 'Victory! View Scoresheet' : `Word: ${solution} • View Result`}</span>
+            <Award className="w-3.5 h-3.5 text-amber-300" />
+            <span>Scoresheet</span>
           </button>
+          {mode !== 'daily' && (
+            <button
+              onClick={handleNextWord}
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-full shadow-2xl flex items-center gap-1.5 border border-emerald-400/40 animate-pulse cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-white" />
+              <span>Play Again</span>
+            </button>
+          )}
         </div>
       )}
 

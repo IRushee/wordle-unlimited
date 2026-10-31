@@ -19,8 +19,8 @@ export default function Tile({
       setRevealed(false);
       setAnimationStage('idle');
 
-      const startDelay = colIndex * 300; // 300ms stagger between cells
-      const switchColorDelay = startDelay + 250; // halfway through the flip
+      const startDelay = colIndex * 250; // authentic 250ms stagger between cells
+      const switchColorDelay = startDelay + 250; // midpoint of flip (face turns over)
       const endFlipDelay = startDelay + 500; // flip complete
 
       // 1. Start Phase 1: fold up to 90deg

@@ -14,12 +14,25 @@ export default function Keyboard({
   onBackspace,
   keyStatuses = {},
   disabled = false,
+  gameStatus = 'IN_PROGRESS',
+  mode = 'unlimited',
   settings,
 }) {
   const isDark = settings?.darkMode !== false;
   const isHC = settings?.highContrast;
+  const isGameOver = gameStatus !== 'IN_PROGRESS';
 
   const handleKeyClick = (key) => {
+    // If the game is over and player taps ENTER / PLAY AGAIN:
+    if (isGameOver && key === 'ENTER') {
+      if (settings?.hapticsEnabled !== false) {
+        triggerHaptic('light');
+      }
+      soundEngine.playKey();
+      onEnter();
+      return;
+    }
+
     if (disabled) return;
 
     if (settings?.hapticsEnabled !== false) {
@@ -79,6 +92,8 @@ export default function Keyboard({
         <div key={rowIndex} className="flex justify-center gap-1 sm:gap-1.5 w-full">
           {row.map((key) => {
             const isSpecial = key === 'ENTER' || key === 'BACKSPACE';
+            const isEnterKey = key === 'ENTER';
+            const isButtonDisabled = disabled && !(isGameOver && isEnterKey);
             const colorClass = getKeyColor(key);
 
             return (
@@ -86,17 +101,21 @@ export default function Keyboard({
                 key={key}
                 type="button"
                 onClick={() => handleKeyClick(key)}
-                disabled={disabled}
-                aria-label={key === 'BACKSPACE' ? 'Backspace' : key === 'ENTER' ? 'Enter' : key}
+                disabled={isButtonDisabled}
+                aria-label={key === 'BACKSPACE' ? 'Backspace' : key === 'ENTER' ? (isGameOver ? 'Play Again' : 'Enter') : key}
                 className={`h-12 sm:h-14 rounded-[4px] font-bold text-xs sm:text-sm md:text-base flex items-center justify-center transition-colors duration-250 key-touch touch-manipulation cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
                   isSpecial ? 'flex-[1.5] text-[10px] sm:text-xs tracking-wider' : 'flex-1'
-                } ${colorClass} ${disabled ? 'cursor-not-allowed opacity-80' : ''}`}
+                } ${
+                  isGameOver && isEnterKey && mode !== 'daily'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-black animate-pulse'
+                    : colorClass
+                } ${isButtonDisabled ? 'cursor-not-allowed opacity-80' : ''}`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 {key === 'BACKSPACE' ? (
                   <Delete className="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : key === 'ENTER' ? (
-                  'ENTER'
+                ) : isEnterKey ? (
+                  isGameOver && mode !== 'daily' ? 'NEXT ➔' : 'ENTER'
                 ) : (
                   key
                 )}
