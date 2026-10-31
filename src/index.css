@@ -111,8 +111,50 @@ html, body {
 
 /* Keypress micro-bounce on keyboard */
 .key-touch:active {
-  transform: scale(0.92);
-  transition: transform 0.06s ease-out;
+  transform: translateY(1px);
+  filter: brightness(0.9);
+  transition: transform 0.05s ease-out, filter 0.05s ease-out;
+}
+
+/* Modal Animations */
+@keyframes modalBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalContentPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modalBackdropFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-card {
+  animation: modalContentPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Toast Notification Animation */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast {
+  animation: toastSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Safe Area Insets for mobile notch & home bar */
@@ -141,4 +183,21 @@ html, body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(150, 150, 150, 0.45);
+}
+
+/* Accessible focus ring styling */
+:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Accessibility: respect user prefers-reduced-motion setting */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

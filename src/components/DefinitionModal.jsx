@@ -6,6 +6,16 @@ export default function DefinitionModal({ isOpen, onClose, word }) {
   const [loading, setLoading] = useState(true);
   const [definitionData, setDefinitionData] = useState(null);
 
+  // Support ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   useEffect(() => {
     if (!isOpen || !word) return;
 
@@ -34,19 +44,29 @@ export default function DefinitionModal({ isOpen, onClose, word }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-letter-pop">
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md p-5 sm:p-6 text-zinc-900 dark:text-white shadow-2xl flex flex-col gap-4 relative max-h-[92vh] overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="definition-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-modal-backdrop select-none"
+    >
+      <div className="bg-white dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md p-4 sm:p-6 text-zinc-900 dark:text-white shadow-2xl flex flex-col gap-4 relative max-h-[90vh] overflow-hidden animate-modal-card">
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-sky-500" />
-            <h2 className="font-extrabold text-lg sm:text-xl tracking-wider">
+            <h2 id="definition-modal-title" className="font-extrabold text-base sm:text-lg tracking-wider">
               WORD DICTIONARY
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            aria-label="Close dialog"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <X className="w-5 h-5" />
           </button>

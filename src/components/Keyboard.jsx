@@ -59,8 +59,8 @@ export default function Keyboard({
 
     if (status === 'absent') {
       return isDark
-        ? 'bg-[#3a3a3c] text-zinc-400 opacity-60'
-        : 'bg-[#787c7e] text-zinc-100 opacity-70';
+        ? 'bg-[#3a3a3c] text-white hover:bg-[#454547]'
+        : 'bg-[#787c7e] text-white hover:bg-[#6c7072]';
     }
 
     // Default untested key
@@ -70,7 +70,11 @@ export default function Keyboard({
   };
 
   return (
-    <div className="w-full max-w-[500px] mx-auto px-1 sm:px-2 select-none safe-bottom flex flex-col gap-1.5 sm:gap-2 pb-2">
+    <div
+      role="group"
+      aria-label="Virtual keyboard"
+      className="w-full max-w-[500px] mx-auto px-1 sm:px-2 select-none safe-bottom flex flex-col gap-1.5 sm:gap-2 pb-2"
+    >
       {ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className="flex justify-center gap-1 sm:gap-1.5 w-full">
           {row.map((key) => {
@@ -83,8 +87,8 @@ export default function Keyboard({
                 type="button"
                 onClick={() => handleKeyClick(key)}
                 disabled={disabled}
-                aria-label={key === 'BACKSPACE' ? 'Backspace' : key}
-                className={`h-12 sm:h-14 rounded-[4px] font-bold text-xs sm:text-sm md:text-base flex items-center justify-center transition-all duration-300 active:scale-95 touch-manipulation cursor-pointer shadow-sm ${
+                aria-label={key === 'BACKSPACE' ? 'Backspace' : key === 'ENTER' ? 'Enter' : key}
+                className={`h-12 sm:h-14 rounded-[4px] font-bold text-xs sm:text-sm md:text-base flex items-center justify-center transition-colors duration-250 key-touch touch-manipulation cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
                   isSpecial ? 'flex-[1.5] text-[10px] sm:text-xs tracking-wider' : 'flex-1'
                 } ${colorClass} ${disabled ? 'cursor-not-allowed opacity-80' : ''}`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}

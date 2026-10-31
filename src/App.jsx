@@ -90,7 +90,7 @@ export default function App() {
       root.style.backgroundColor = '#121213';
     } else {
       root.classList.remove('dark');
-      root.style.backgroundColor = '#f8fafc';
+      root.style.backgroundColor = '#ffffff';
     }
   }, [settings.darkMode]);
 
@@ -599,7 +599,7 @@ export default function App() {
   return (
     <div
       className={`min-h-[100dvh] flex flex-col justify-between overflow-hidden transition-colors ${
-        settings.darkMode !== false ? 'bg-[#121213] text-white' : 'bg-slate-50 text-zinc-900'
+        settings.darkMode !== false ? 'bg-[#121213] text-white' : 'bg-white text-zinc-900'
       }`}
     >
       {/* Toast Overlay */}
