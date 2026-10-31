@@ -18,6 +18,8 @@ import {
   ChevronUp,
   Database,
   Loader2,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   getPlayerSyncId,
@@ -92,34 +94,60 @@ export default function SettingsModal({
   };
 
   const handleTestConnection = async () => {
+    if (!url.trim()) {
+      showToast('Please enter your Supabase URL', 'warning');
+      setTestResult({ success: false, message: 'Supabase Project URL is required. Example: https://xyz.supabase.co' });
+      return;
+    }
+
+    if (!url.trim().startsWith('https://')) {
+      showToast('Supabase URL must start with https://', 'warning');
+      setTestResult({ success: false, message: 'Invalid URL: Must start with "https://" (e.g. https://xyz.supabase.co)' });
+      return;
+    }
+
+    if (!anonKey.trim()) {
+      showToast('Please enter your Supabase Anon Key', 'warning');
+      setTestResult({ success: false, message: 'Supabase Anon Key is required to authenticate database requests.' });
+      return;
+    }
+
     setSyncLoading(true);
     setTestResult(null);
-    saveSupabaseCredentials(url, anonKey);
+    saveSupabaseCredentials(url.trim(), anonKey.trim());
 
-    const res = await testSupabaseConnection(url, anonKey);
+    const res = await testSupabaseConnection(url.trim(), anonKey.trim());
     setSyncLoading(false);
     setTestResult(res);
 
     if (res.success) {
       showToast('Connected to Supabase!', 'success');
     } else {
-      showToast(res.message || 'Connection failed', 'error');
+      showToast(res.message || 'Connection failed: Check URL and API key', 'warning');
     }
   };
 
   const handleCloudBackup = async () => {
+    if (!url.trim() || !anonKey.trim()) {
+      showToast('Please configure Supabase URL and Key first', 'warning');
+      return;
+    }
     if (!onSyncToCloud) return;
     setSyncLoading(true);
     const res = await onSyncToCloud();
     setSyncLoading(false);
     if (res?.success) {
-      showToast('All game progress backed up to Supabase!', 'success');
+      showToast('Game progress backed up to cloud!', 'success');
     } else {
-      showToast(res?.message || 'Sync failed', 'error');
+      showToast(res?.message || 'Backup failed. Please check connection.', 'warning');
     }
   };
 
   const handleCloudRestore = async () => {
+    if (!url.trim() || !anonKey.trim()) {
+      showToast('Please configure Supabase URL and Key first', 'warning');
+      return;
+    }
     if (!onSyncFromCloud) return;
     setSyncLoading(true);
     const res = await onSyncFromCloud();
@@ -127,7 +155,7 @@ export default function SettingsModal({
     if (res?.success) {
       showToast('Progress restored from cloud!', 'success');
     } else {
-      showToast(res?.message || 'Restore failed', 'error');
+      showToast(res?.message || 'Restore failed. No cloud save found for this ID.', 'warning');
     }
   };
 
@@ -273,13 +301,18 @@ export default function SettingsModal({
 
               {testResult && (
                 <div
-                  className={`p-2 rounded text-[11px] font-semibold ${
+                  className={`p-2.5 rounded-lg text-xs font-semibold flex items-start gap-2 ${
                     testResult.success
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                       : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                   }`}
                 >
-                  {testResult.message}
+                  {testResult.success ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  )}
+                  <span className="leading-snug">{testResult.message}</span>
                 </div>
               )}
             </div>

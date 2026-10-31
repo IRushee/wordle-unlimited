@@ -68,13 +68,34 @@ export default function App() {
   // Derived max guesses
   const maxGuesses = getMaxGuesses(wordLength);
 
-  // Toast helper
-  const showToast = useCallback((message, type = 'info', duration = 2200) => {
-    const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+  // Toast helper - Wordle single active notification with shake refresh
+  const toastTimerRef = useRef(null);
+  const showToast = useCallback((message, type = 'info', duration = 2000) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    const id = Date.now().toString(36);
+    setToasts((prev) => {
+      const current = prev[0];
+      if (current && current.message === message) {
+        return [{
+          ...current,
+          shake: true,
+          shakeCount: (current.shakeCount || 0) + 1,
+        }];
+      }
+      return [{ id, message, type, shake: type === 'warning' || type === 'error' || type === 'hard-mode' }];
+    });
+
+    toastTimerRef.current = setTimeout(() => {
+      setToasts([]);
     }, duration);
+  }, []);
+
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToasts([]);
   }, []);
 
   // Update audio muted status whenever settings change
@@ -218,7 +239,7 @@ export default function App() {
     setGameStatus('LOST');
     soundEngine.playLoss();
     triggerHaptic('error');
-    showToast(`Time's up! The word was ${solution}`, 'error', 3500);
+    showToast(`Time's up! The word was ${solution}`, 'game-over', 3800);
 
     const updatedStats = storage.recordGameResult({
       length: wordLength,
@@ -268,7 +289,7 @@ export default function App() {
       setShakeRowIndex(rowIdx);
       soundEngine.playInvalid();
       triggerHaptic('error');
-      showToast('Not enough letters', 'error');
+      showToast('Not enough letters', 'warning', 1800);
       setTimeout(() => setShakeRowIndex(null), 550);
       return;
     }
@@ -280,7 +301,7 @@ export default function App() {
         setShakeRowIndex(rowIdx);
         soundEngine.playInvalid();
         triggerHaptic('error');
-        showToast(validation.message, 'error', 2500);
+        showToast(validation.message, 'hard-mode', 2600);
         setTimeout(() => setShakeRowIndex(null), 550);
         return;
       }
@@ -291,7 +312,7 @@ export default function App() {
       setShakeRowIndex(rowIdx);
       soundEngine.playInvalid();
       triggerHaptic('error');
-      showToast('Not in word list', 'error');
+      showToast('Not in word list', 'warning', 1800);
       setTimeout(() => setShakeRowIndex(null), 550);
       return;
     }
@@ -389,7 +410,7 @@ export default function App() {
         setGameStatus('LOST');
         soundEngine.playLoss();
         triggerHaptic('error');
-        showToast(`The word was ${solution}`, 'error', 3500);
+        showToast(`The word was ${solution}`, 'game-over', 3800);
 
         const updatedStats = storage.recordGameResult({
           length: wordLength,
@@ -567,14 +588,14 @@ export default function App() {
     if (hintCount % 3 === 0) {
       showToast(
         `Hint 1: Contains ${vowels.length} vowel${vowels.length === 1 ? '' : 's'} (${uniqueVowels.join(', ') || 'none'})`,
-        'info',
-        3500
+        'hint',
+        3200
       );
     } else if (hintCount % 3 === 1) {
       showToast(
         `Hint 2: Starts with "${solution[0]}" and ends with "${solution[solution.length - 1]}"`,
-        'info',
-        3500
+        'hint',
+        3200
       );
     } else {
       const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -588,9 +609,9 @@ export default function App() {
           });
           return next;
         });
-        showToast(`Hint 3: Eliminated unused letters: ${toEliminate.join(', ')}`, 'info', 3000);
+        showToast(`Hint 3: Eliminated unused letters: ${toEliminate.join(', ')}`, 'hint', 3200);
       } else {
-        showToast(`Hint 3: Word length is ${solution.length} letters`, 'info', 3000);
+        showToast(`Hint 3: Word length is ${solution.length} letters`, 'hint', 3200);
       }
     }
     setHintCount((prev) => prev + 1);
@@ -603,7 +624,7 @@ export default function App() {
       }`}
     >
       {/* Toast Overlay */}
-      <Toast toasts={toasts} />
+      <Toast toasts={toasts} onDismiss={dismissToast} />
 
       {/* Main Header */}
       <Header

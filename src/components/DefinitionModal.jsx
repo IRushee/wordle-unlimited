@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Volume2, BookOpen, Loader2, Sparkles } from 'lucide-react';
+import { X, Volume2, BookOpen, Loader2, Sparkles, HelpCircle, ExternalLink } from 'lucide-react';
 import { fetchWordDefinition } from '../utils/words';
 
 export default function DefinitionModal({ isOpen, onClose, word }) {
@@ -103,49 +103,70 @@ export default function DefinitionModal({ isOpen, onClose, word }) {
               )}
             </div>
 
-            {/* Meanings */}
-            <div className="flex flex-col gap-3">
-              {definitionData?.meanings?.map((meaning, index) => (
-                <div
-                  key={index}
-                  className="bg-zinc-50/80 dark:bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80 flex flex-col gap-2"
+            {/* Meanings or Fallback State */}
+            {!definitionData?.meanings || definitionData.meanings.length === 0 ? (
+              <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 flex flex-col items-center text-center gap-2.5 my-2">
+                <HelpCircle className="w-8 h-8 text-amber-500 mb-0.5" />
+                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                  No public definition indexed
+                </span>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
+                  "{word}" is an accepted valid word in the Wordle dictionary, but detailed definitions are not available via the public dictionary service.
+                </p>
+                <a
+                  href={`https://www.google.com/search?q=define+${encodeURIComponent(word)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
                 >
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider italic">
-                    {meaning.partOfSpeech}
-                  </span>
+                  <span>Search definition on Google</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {definitionData.meanings.map((meaning, index) => (
+                  <div
+                    key={index}
+                    className="bg-zinc-50/80 dark:bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80 flex flex-col gap-2"
+                  >
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider italic">
+                      {meaning.partOfSpeech}
+                    </span>
 
-                  <div className="flex flex-col gap-2 text-sm text-zinc-800 dark:text-zinc-200">
-                    {meaning.definitions.map((def, dIdx) => (
-                      <div key={dIdx} className="flex flex-col gap-0.5">
-                        <div className="flex items-start gap-2">
-                          <span className="text-emerald-500 font-bold">•</span>
-                          <span className="leading-relaxed">{def.definition}</span>
+                    <div className="flex flex-col gap-2 text-sm text-zinc-800 dark:text-zinc-200">
+                      {meaning.definitions.map((def, dIdx) => (
+                        <div key={dIdx} className="flex flex-col gap-0.5">
+                          <div className="flex items-start gap-2">
+                            <span className="text-emerald-500 font-bold">•</span>
+                            <span className="leading-relaxed">{def.definition}</span>
+                          </div>
+                          {def.example && (
+                            <span className="text-xs text-zinc-500 italic pl-4">
+                              "{def.example}"
+                            </span>
+                          )}
                         </div>
-                        {def.example && (
-                          <span className="text-xs text-zinc-500 italic pl-4">
-                            "{def.example}"
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {meaning.synonyms && meaning.synonyms.length > 0 && (
-                    <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
-                      <span className="text-zinc-500 font-medium">Synonyms:</span>
-                      {meaning.synonyms.map((syn, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-medium"
-                        >
-                          {syn}
-                        </span>
                       ))}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+
+                    {meaning.synonyms && meaning.synonyms.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
+                        <span className="text-zinc-500 font-medium">Synonyms:</span>
+                        {meaning.synonyms.map((syn, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300 font-medium"
+                          >
+                            {syn}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

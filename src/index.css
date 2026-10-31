@@ -141,20 +141,39 @@ html, body {
   animation: modalContentPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Toast Notification Animation */
-@keyframes toastSlideIn {
-  from {
+/* Toast Notification Animations */
+@keyframes toastPopIn {
+  0% {
     opacity: 0;
-    transform: translateY(-8px) scale(0.95);
+    transform: translateY(-8px) scale(0.92);
   }
-  to {
+  60% {
+    transform: translateY(2px) scale(1.02);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+@keyframes toastShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  15%, 45%, 75% {
+    transform: translateX(-4px);
+  }
+  30%, 60%, 90% {
+    transform: translateX(4px);
+  }
+}
+
 .animate-toast {
-  animation: toastSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: toastPopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-shake {
+  animation: toastShake 0.4s ease-in-out;
 }
 
 /* Safe Area Insets for mobile notch & home bar */

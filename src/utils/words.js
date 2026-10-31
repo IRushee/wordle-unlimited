@@ -118,31 +118,41 @@ export function validateHardMode(currentGuess, previousGuesses, previousResults)
   if (!previousGuesses || previousGuesses.length === 0) return { valid: true };
   
   const ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
-  const lastGuess = previousGuesses[previousGuesses.length - 1];
-  const lastResult = previousResults[previousResults.length - 1];
   
-  // Rule 1: Green letters must remain in exact same position
-  for (let i = 0; i < lastResult.length; i++) {
-    if (lastResult[i] === 'correct') {
-      const requiredChar = lastGuess[i];
-      if (currentGuess[i] !== requiredChar) {
-        return {
-          valid: false,
-          message: `${ordinals[i] || `${i + 1}th`} letter must be ${requiredChar}`
-        };
+  // Rule 1: Every correct (green) letter from ANY previous guess must stay in the same position
+  for (let r = 0; r < previousGuesses.length; r++) {
+    const guess = previousGuesses[r];
+    const res = previousResults[r] || [];
+
+    for (let i = 0; i < res.length; i++) {
+      if (res[i] === 'correct') {
+        const requiredChar = guess[i];
+        if (currentGuess[i] !== requiredChar) {
+          return {
+            valid: false,
+            message: `${ordinals[i] || `${i + 1}th`} letter must be ${requiredChar}`,
+            rule: 'hard-mode-position',
+          };
+        }
       }
     }
   }
   
-  // Rule 2: Yellow letters must be used
-  for (let i = 0; i < lastResult.length; i++) {
-    if (lastResult[i] === 'present') {
-      const requiredChar = lastGuess[i];
-      if (!currentGuess.includes(requiredChar)) {
-        return {
-          valid: false,
-          message: `Guess must contain ${requiredChar}`
-        };
+  // Rule 2: Every present (yellow) letter from ANY previous guess must be used in the current guess
+  for (let r = 0; r < previousGuesses.length; r++) {
+    const guess = previousGuesses[r];
+    const res = previousResults[r] || [];
+
+    for (let i = 0; i < res.length; i++) {
+      if (res[i] === 'present') {
+        const requiredChar = guess[i];
+        if (!currentGuess.includes(requiredChar)) {
+          return {
+            valid: false,
+            message: `Guess must contain ${requiredChar}`,
+            rule: 'hard-mode-include',
+          };
+        }
       }
     }
   }
@@ -150,13 +160,14 @@ export function validateHardMode(currentGuess, previousGuesses, previousResults)
   return { valid: true };
 }
 
-// Definition lookup via free public dictionary API
+// Definition lookup via free public dictionary API with robust fallback
 export async function fetchWordDefinition(word) {
+  const cleanWord = word.toLowerCase().trim();
   try {
-    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord}`);
     if (!res.ok) throw new Error('Not found');
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty');
     
     const entry = data[0];
     const phonetic = entry.phonetic || (entry.phonetics && entry.phonetics[0]?.text) || '';
@@ -176,21 +187,15 @@ export async function fetchWordDefinition(word) {
       phonetic,
       audio,
       meanings,
+      isFallback: false,
     };
   } catch {
     return {
       word: word.toUpperCase(),
       phonetic: '',
       audio: null,
-      meanings: [
-        {
-          partOfSpeech: 'word',
-          definitions: [
-            { definition: `A valid English word consisting of ${word.length} letters.` }
-          ],
-          synonyms: []
-        }
-      ]
+      meanings: [],
+      isFallback: true,
     };
   }
 }
