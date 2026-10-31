@@ -34,9 +34,18 @@ export default function App() {
   const [history, setHistory] = useState(() => storage.getHistory());
 
   // Game configuration
-  const [mode, setMode] = useState('unlimited'); // 'unlimited' | 'levels' | 'daily'
-  const [wordLength, setWordLength] = useState(5);
+  const [mode, setMode] = useState(() => storage.getLastPlayedMode()); // 'unlimited' | 'levels' | 'daily'
+  const [wordLength, setWordLength] = useState(() => storage.getLastWordLength());
   const [currentLevel, setCurrentLevel] = useState(() => levelProgress.currentLevel || 1);
+
+  // Persist mode and word length preferences
+  useEffect(() => {
+    storage.setLastPlayedMode(mode);
+  }, [mode]);
+
+  useEffect(() => {
+    storage.setLastWordLength(wordLength);
+  }, [wordLength]);
 
   // Active game state
   const [solution, setSolution] = useState('');
@@ -147,46 +156,58 @@ export default function App() {
       : targetLength;
 
     // Check saved state in storage
-    const saved = storage.getSavedGameState(targetMode, effectiveLength);
+    const saved = storage.getSavedGameState(targetMode, effectiveLength, targetLevel);
 
-    if (saved && saved.solution && saved.solution.length === effectiveLength && saved.gameStatus === 'IN_PROGRESS') {
-      setSolution(saved.solution);
-      setGuesses(saved.guesses || []);
-      setResults(saved.results || []);
-      setCurrentGuess(saved.currentGuess || '');
-      setGameStatus(saved.gameStatus || 'IN_PROGRESS');
-      setKeyStatuses(computeKeyStatuses(saved.guesses || [], saved.results || []));
-      setTimeLeft(saved.timeLeft || (settings.timeAttack ? 90 : null));
-    } else {
-      // Pick fresh word
-      let word = '';
-      if (targetMode === 'levels') {
-        const lvlData = getLevelWord(targetLevel);
-        word = lvlData.word;
-      } else if (targetMode === 'daily') {
-        word = getDailyWord(effectiveLength);
-      } else {
-        word = getRandomWord(effectiveLength);
+    if (saved && saved.solution && saved.solution.length === effectiveLength) {
+      if (
+        saved.gameStatus === 'IN_PROGRESS' ||
+        (targetMode === 'daily' && (saved.gameStatus === 'WON' || saved.gameStatus === 'LOST'))
+      ) {
+        setSolution(saved.solution);
+        setGuesses(saved.guesses || []);
+        setResults(saved.results || []);
+        setCurrentGuess(saved.currentGuess || '');
+        setGameStatus(saved.gameStatus || 'IN_PROGRESS');
+        setKeyStatuses(computeKeyStatuses(saved.guesses || [], saved.results || []));
+        setTimeLeft(saved.timeLeft || (settings.timeAttack ? 90 : null));
+        setWordLength(effectiveLength);
+        setWinningRowIndex(null);
+        setRevealingRowIndex(null);
+        setShakeRowIndex(null);
+        return;
       }
-
-      setSolution(word);
-      setGuesses([]);
-      setResults([]);
-      setCurrentGuess('');
-      setGameStatus('IN_PROGRESS');
-      setKeyStatuses({});
-      setHintCount(0);
-      setTimeLeft(settings.timeAttack ? 90 : null);
-
-      storage.saveGameState(targetMode, effectiveLength, {
-        solution: word,
-        guesses: [],
-        results: [],
-        currentGuess: '',
-        gameStatus: 'IN_PROGRESS',
-        timeLeft: settings.timeAttack ? 90 : null,
-      });
     }
+
+    // Pick fresh word
+    let word = '';
+    if (targetMode === 'levels') {
+      const lvlData = getLevelWord(targetLevel);
+      word = lvlData.word;
+    } else if (targetMode === 'daily') {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      word = getDailyWord(effectiveLength, dateStr);
+    } else {
+      word = getRandomWord(effectiveLength);
+    }
+
+    setSolution(word);
+    setGuesses([]);
+    setResults([]);
+    setCurrentGuess('');
+    setGameStatus('IN_PROGRESS');
+    setKeyStatuses({});
+    setHintCount(0);
+    setTimeLeft(settings.timeAttack ? 90 : null);
+
+    storage.saveGameState(targetMode, effectiveLength, {
+      solution: word,
+      guesses: [],
+      results: [],
+      currentGuess: '',
+      gameStatus: 'IN_PROGRESS',
+      timeLeft: settings.timeAttack ? 90 : null,
+    }, targetLevel);
 
     setWordLength(effectiveLength);
     setWinningRowIndex(null);
@@ -209,8 +230,8 @@ export default function App() {
       currentGuess,
       gameStatus,
       timeLeft,
-    });
-  }, [mode, wordLength, solution, guesses, results, currentGuess, gameStatus, timeLeft]);
+    }, currentLevel);
+  }, [mode, wordLength, solution, guesses, results, currentGuess, gameStatus, timeLeft, currentLevel]);
 
   // Time Attack Timer loop
   useEffect(() => {
@@ -501,7 +522,16 @@ export default function App() {
 
   // Start next word / new game
   const handleNextWord = () => {
-    storage.saveGameState(mode, wordLength, null);
+    if (mode === 'daily') {
+      if (gameStatus === 'WON' || gameStatus === 'LOST') {
+        showToast('Daily puzzle completed for today! Play Unlimited or Levels.', 'info', 3000);
+      } else {
+        showToast('Daily word cannot be skipped. Keep guessing!', 'warning', 2500);
+      }
+      return;
+    }
+
+    storage.saveGameState(mode, wordLength, null, currentLevel);
     if (mode === 'levels') {
       const nextLevel = currentLevel + 1;
       setCurrentLevel(nextLevel);
@@ -705,6 +735,7 @@ export default function App() {
         mode={mode}
         level={currentLevel}
         onNextWord={handleNextWord}
+        onSwitchMode={(newMode) => setMode(newMode)}
         onOpenDefinition={(w) => setDefinitionWord(w)}
         showToast={showToast}
         settings={settings}

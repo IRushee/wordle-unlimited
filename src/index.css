@@ -47,23 +47,23 @@ html, body {
   animation: nytPopIn 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* First half of flip: rotate 0deg -> 90deg (tile folds away) */
+/* First half of flip: rotate 0deg -> 90deg with 3D perspective depth */
 @keyframes nytFlipIn {
   0% {
-    transform: rotateX(0deg);
+    transform: perspective(1000px) rotateX(0deg);
   }
   100% {
-    transform: rotateX(90deg);
+    transform: perspective(1000px) rotateX(90deg);
   }
 }
 
-/* Second half of flip: rotate 90deg -> 0deg (tile unfolds with new color) */
+/* Second half of flip: rotate 90deg -> 0deg with 3D perspective depth */
 @keyframes nytFlipOut {
   0% {
-    transform: rotateX(90deg);
+    transform: perspective(1000px) rotateX(90deg);
   }
   100% {
-    transform: rotateX(0deg);
+    transform: perspective(1000px) rotateX(0deg);
   }
 }
 

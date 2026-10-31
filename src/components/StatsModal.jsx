@@ -14,11 +14,32 @@ export default function StatsModal({
   mode,
   level,
   onNextWord,
+  onSwitchMode,
   onOpenDefinition,
   showToast,
   settings,
 }) {
   const [selectedTab, setSelectedTab] = useState('all');
+  const [countdown, setCountdown] = useState('');
+
+  // Daily puzzle midnight countdown
+  useEffect(() => {
+    if (!isOpen || mode !== 'daily') return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+      const diff = Math.max(0, tomorrow - now);
+      const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+      const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+      setCountdown(`${hours}:${minutes}:${seconds}`);
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, mode]);
 
   // Support ESC key to close modal
   useEffect(() => {
@@ -222,28 +243,64 @@ export default function StatsModal({
               </button>
             </div>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleShare}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer border border-zinc-200 dark:border-zinc-700 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500"
-              >
-                <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Share Score
-              </button>
+            {mode === 'daily' ? (
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between px-3.5 py-2.5 bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/30 rounded-xl">
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                    Next Daily Puzzle
+                  </span>
+                  <span className="font-mono font-black text-sm text-blue-800 dark:text-blue-200">
+                    {countdown}
+                  </span>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onNextWord();
-                }}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-900/20 active:scale-95 text-white focus-visible:ring-2 focus-visible:ring-emerald-500"
-              >
-                <span>Next Word</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer border border-zinc-200 dark:border-zinc-700 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
+                    <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    Share Score
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      if (onSwitchMode) onSwitchMode('unlimited');
+                    }}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-900/20 active:scale-95 text-white focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    <span>Play Unlimited</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer border border-zinc-200 dark:border-zinc-700 active:scale-95 shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  Share Score
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onNextWord();
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-900/20 active:scale-95 text-white focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <span>{mode === 'levels' ? 'Next Level' : 'Next Word'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

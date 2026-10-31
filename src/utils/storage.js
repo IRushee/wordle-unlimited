@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   STATS: 'wordle_unlimited_stats_v1',
   LEVELS: 'wordle_unlimited_levels_v1',
   HISTORY: 'wordle_unlimited_history_v1',
+  LAST_MODE: 'wordle_unlimited_last_mode_v1',
+  LAST_LENGTH: 'wordle_unlimited_last_length_v1',
 };
 
 const DEFAULT_SETTINGS = {
@@ -44,23 +46,68 @@ export const storage = {
     } catch {}
   },
 
-  getSavedGameState(mode, length) {
+  getLastPlayedMode() {
+    try {
+      const mode = localStorage.getItem(STORAGE_KEYS.LAST_MODE);
+      return mode && ['unlimited', 'levels', 'daily'].includes(mode) ? mode : 'unlimited';
+    } catch {
+      return 'unlimited';
+    }
+  },
+
+  setLastPlayedMode(mode) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.LAST_MODE, mode);
+    } catch {}
+  },
+
+  getLastWordLength() {
+    try {
+      const len = localStorage.getItem(STORAGE_KEYS.LAST_LENGTH);
+      const parsed = len ? parseInt(len, 10) : 5;
+      return [4, 5, 6, 7, 8].includes(parsed) ? parsed : 5;
+    } catch {
+      return 5;
+    }
+  },
+
+  setLastWordLength(len) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.LAST_LENGTH, String(len));
+    } catch {}
+  },
+
+  getSavedGameState(mode, length, level = null) {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
       if (!data) return null;
       const parsed = JSON.parse(data);
-      const key = `${mode}_${length}`;
+      let key = `${mode}_${length}`;
+      if (mode === 'levels') {
+        key = `levels_lvl_${level || 1}`;
+      } else if (mode === 'daily') {
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        key = `daily_${length}_${dateStr}`;
+      }
       return parsed[key] || null;
     } catch {
       return null;
     }
   },
 
-  saveGameState(mode, length, state) {
+  saveGameState(mode, length, state, level = null) {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
       const parsed = raw ? JSON.parse(raw) : {};
-      const key = `${mode}_${length}`;
+      let key = `${mode}_${length}`;
+      if (mode === 'levels') {
+        key = `levels_lvl_${level || 1}`;
+      } else if (mode === 'daily') {
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        key = `daily_${length}_${dateStr}`;
+      }
       if (state === null) {
         delete parsed[key];
       } else {
