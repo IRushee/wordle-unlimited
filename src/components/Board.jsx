@@ -4,13 +4,14 @@ import Tile from './Tile';
 export default function Board({
   wordLength,
   maxGuesses,
-  guesses,
-  results,
-  currentGuess,
-  currentRow,
-  shakeRowIndex,
-  revealingRowIndex,
-  winningRowIndex,
+  guesses = [],
+  results = [],
+  currentGuess = '',
+  currentRow = 0,
+  shakeRowIndex = null,
+  revealingRowIndex = null,
+  revealingResult = null,
+  winningRowIndex = null,
   settings,
 }) {
   const rows = [];
@@ -30,6 +31,9 @@ export default function Board({
       rowResults = results[r] || [];
     } else if (isCurrent) {
       rowLetters = currentGuess.split('');
+      if (isRevealing && revealingResult) {
+        rowResults = revealingResult;
+      }
     }
 
     const tiles = [];
@@ -38,6 +42,9 @@ export default function Board({
       let status = 'empty';
       if (isSubmitted) {
         status = rowResults[c] || 'absent';
+      } else if (isRevealing && rowResults[c]) {
+        // Active cell-by-cell revealing row
+        status = rowResults[c];
       } else if (letter) {
         status = 'tbd';
       }

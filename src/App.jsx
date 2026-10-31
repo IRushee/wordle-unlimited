@@ -50,6 +50,7 @@ export default function App() {
   // Animations & feedback
   const [shakeRowIndex, setShakeRowIndex] = useState(null);
   const [revealingRowIndex, setRevealingRowIndex] = useState(null);
+  const [revealingResult, setRevealingResult] = useState(null);
   const [winningRowIndex, setWinningRowIndex] = useState(null);
   const [toasts, setToasts] = useState([]);
 
@@ -323,6 +324,7 @@ export default function App() {
     const newResults = [...results, evalResult];
 
     setRevealingRowIndex(rowIdx);
+    setRevealingResult(evalResult);
 
     // Staggered cell-by-cell flip with progressive keyboard & sound reveals
     for (let c = 0; c < wordLength; c++) {
@@ -355,6 +357,7 @@ export default function App() {
       setResults(newResults);
       setCurrentGuess('');
       setRevealingRowIndex(null);
+      setRevealingResult(null);
 
       const newKeyMap = computeKeyStatuses(newGuesses, newResults);
       setKeyStatuses(newKeyMap);
@@ -661,6 +664,7 @@ export default function App() {
         currentRow={guesses.length}
         shakeRowIndex={shakeRowIndex}
         revealingRowIndex={revealingRowIndex}
+        revealingResult={revealingResult}
         winningRowIndex={winningRowIndex}
         settings={settings}
       />

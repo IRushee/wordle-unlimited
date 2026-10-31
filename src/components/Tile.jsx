@@ -16,6 +16,9 @@ export default function Tile({
 
   useEffect(() => {
     if (isRevealing) {
+      setRevealed(false);
+      setAnimationStage('idle');
+
       const startDelay = colIndex * 300; // 300ms stagger between cells
       const switchColorDelay = startDelay + 250; // halfway through the flip
       const endFlipDelay = startDelay + 500; // flip complete

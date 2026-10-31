@@ -20,6 +20,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Languages,
 } from 'lucide-react';
 import {
   getPlayerSyncId,
@@ -321,6 +322,49 @@ export default function SettingsModal({
 
         {/* Gameplay Settings List */}
         <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800/80">
+          {/* English Dialect */}
+          <div className="flex items-center justify-between py-3">
+            <div className="flex flex-col pr-3">
+              <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                <Languages className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                English Dialect
+              </span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                Indian English accepts both British (COLOUR) & Indian words (ROTI, SAMOSA, PANEER)
+              </span>
+            </div>
+            <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 p-0.5 rounded-lg text-xs font-bold shrink-0 border border-zinc-200 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateSetting('languageVariant', 'indian');
+                  showToast('English dialect set to Indian English (British + Desi)', 'info');
+                }}
+                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  (settings?.languageVariant || 'indian') === 'indian'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                🇮🇳 Indian
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateSetting('languageVariant', 'american');
+                  showToast('English dialect set to American English', 'info');
+                }}
+                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  settings?.languageVariant === 'american'
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                🇺🇸 US
+              </button>
+            </div>
+          </div>
+
           {/* Hard Mode */}
           <div className="flex items-center justify-between py-3">
             <div className="flex flex-col pr-4">

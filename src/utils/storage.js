@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
   strictDictionary: true,
   timeAttack: false,
   timerDuration: 90, // seconds for time attack
+  languageVariant: 'indian', // 'indian' (British/Commonwealth + Desi words) | 'american'
 };
 
 const DEFAULT_STATS_ENTRY = {
