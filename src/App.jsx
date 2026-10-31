@@ -303,14 +303,31 @@ export default function App() {
 
     setRevealingRowIndex(rowIdx);
 
-    // Sequential audio pops during flip
+    // Staggered cell-by-cell flip with progressive keyboard & sound reveals
     for (let c = 0; c < wordLength; c++) {
+      const char = currentGuess[c];
+      const res = evalResult[c];
+
+      // At exactly 250ms into this cell's flip (midpoint where face turns over):
       setTimeout(() => {
         soundEngine.playTileFlip(c);
-      }, c * 250);
+
+        // Progressively update the keyboard key color in sync with this tile flip
+        setKeyStatuses((prev) => {
+          const currentBest = prev[char];
+          if (res === 'correct') {
+            return { ...prev, [char]: 'correct' };
+          } else if (res === 'present' && currentBest !== 'correct') {
+            return { ...prev, [char]: 'present' };
+          } else if (res === 'absent' && !currentBest) {
+            return { ...prev, [char]: 'absent' };
+          }
+          return prev;
+        });
+      }, c * 300 + 250);
     }
 
-    const totalFlipDuration = wordLength * 250 + 200;
+    const totalFlipDuration = wordLength * 300 + 250;
 
     setTimeout(() => {
       setGuesses(newGuesses);
@@ -327,10 +344,14 @@ export default function App() {
 
       if (won) {
         setGameStatus('WON');
-        setWinningRowIndex(rowIdx);
-        fireWinConfetti();
-        soundEngine.playWin();
-        triggerHaptic('success');
+
+        // Small dramatic pause before victory wave bounce
+        setTimeout(() => {
+          setWinningRowIndex(rowIdx);
+          fireWinConfetti();
+          soundEngine.playWin();
+          triggerHaptic('success');
+        }, 200);
 
         // Complimentary toast
         const winPhrases = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'];
@@ -363,7 +384,7 @@ export default function App() {
 
         setTimeout(() => {
           setShowStatsModal(true);
-        }, 1600);
+        }, 1800);
       } else if (lost) {
         setGameStatus('LOST');
         soundEngine.playLoss();

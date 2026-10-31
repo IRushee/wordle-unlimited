@@ -8,26 +8,54 @@ export default function Tile({
   isBouncing = false,
   settings,
 }) {
-  const [flipped, setFlipped] = useState(false);
+  // animationStage: 'idle' | 'flipping-down' | 'flipping-up'
+  const [animationStage, setAnimationStage] = useState('idle');
+  const [revealed, setRevealed] = useState(
+    status === 'correct' || status === 'present' || status === 'absent'
+  );
 
   useEffect(() => {
     if (isRevealing) {
-      const timer = setTimeout(() => {
-        setFlipped(true);
-      }, colIndex * 250);
-      return () => clearTimeout(timer);
-    } else if (status === 'correct' || status === 'present' || status === 'absent') {
-      setFlipped(true);
+      const startDelay = colIndex * 300; // 300ms stagger between cells
+      const switchColorDelay = startDelay + 250; // halfway through the flip
+      const endFlipDelay = startDelay + 500; // flip complete
+
+      // 1. Start Phase 1: fold up to 90deg
+      const timer1 = setTimeout(() => {
+        setAnimationStage('flipping-down');
+      }, startDelay);
+
+      // 2. Switch color at 90deg and start unfolding
+      const timer2 = setTimeout(() => {
+        setRevealed(true);
+        setAnimationStage('flipping-up');
+      }, switchColorDelay);
+
+      // 3. Complete flip
+      const timer3 = setTimeout(() => {
+        setAnimationStage('idle');
+      }, endFlipDelay);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
     } else {
-      setFlipped(false);
+      if (status === 'correct' || status === 'present' || status === 'absent') {
+        setRevealed(true);
+      } else {
+        setRevealed(false);
+      }
+      setAnimationStage('idle');
     }
   }, [isRevealing, colIndex, status]);
 
-  // Color mappings
-  const getRevealedColorClasses = () => {
-    const isHC = settings?.highContrast;
-    const isDark = settings?.darkMode !== false;
+  const isDark = settings?.darkMode !== false;
+  const isHC = settings?.highContrast;
 
+  // Clue color styles (NYT authentic colors)
+  const getRevealedClasses = () => {
     if (status === 'correct') {
       return isHC
         ? 'bg-[#f5793a] text-white border-[#f5793a]'
@@ -53,42 +81,39 @@ export default function Tile({
     return '';
   };
 
-  const isDark = settings?.darkMode !== false;
-
-  // Unflipped / current state border & background
-  const getPreRevealStyle = () => {
+  // Pre-reveal border & fill
+  const getPreRevealClasses = () => {
     if (letter) {
       return isDark
-        ? 'border-zinc-500 text-white bg-zinc-900/40 animate-letter-pop'
-        : 'border-zinc-700 text-zinc-900 bg-white animate-letter-pop';
+        ? 'border-[#565758] text-white bg-transparent animate-pop'
+        : 'border-[#878a8c] text-zinc-900 bg-white animate-pop';
     }
     return isDark
       ? 'border-[#3a3a3c] text-white bg-transparent'
-      : 'border-zinc-300 text-zinc-900 bg-white';
+      : 'border-[#d3d6da] text-zinc-900 bg-white';
+  };
+
+  // Select flip animation class based on stage
+  const getFlipClass = () => {
+    if (animationStage === 'flipping-down') return 'flip-phase-1';
+    if (animationStage === 'flipping-up') return 'flip-phase-2';
+    return '';
   };
 
   return (
     <div
-      className={`relative select-none aspect-square flex items-center justify-center font-bold text-lg sm:text-2xl md:text-3xl rounded-sm sm:rounded-md transition-all duration-150 tile-flip-container ${
-        isBouncing ? 'animate-win-bounce' : ''
-      }`}
+      className={`relative aspect-square flex items-center justify-center font-extrabold select-none text-xl sm:text-2xl md:text-3xl rounded-[3px] sm:rounded-[4px] border-2 transition-colors duration-100 ${
+        revealed ? getRevealedClasses() : getPreRevealClasses()
+      } ${getFlipClass()} ${isBouncing ? 'animate-win-bounce' : ''}`}
       style={{
         animationDelay: isBouncing ? `${colIndex * 100}ms` : undefined,
         perspective: '1000px',
+        willChange: 'transform',
       }}
     >
-      <div
-        className={`w-full h-full flex items-center justify-center border-2 uppercase font-extrabold transition-transform duration-500 transform-gpu ${
-          flipped
-            ? `${getRevealedColorClasses()} rotate-x-0`
-            : `${getPreRevealStyle()} ${isRevealing ? 'rotate-x-90' : 'rotate-x-0'}`
-        }`}
-        style={{
-          transitionDelay: isRevealing ? `${colIndex * 250}ms` : '0ms',
-        }}
-      >
+      <span className="leading-none transform-gpu uppercase tracking-wide">
         {letter || ''}
-      </div>
+      </span>
     </div>
   );
 }

@@ -45,28 +45,28 @@ export default function Keyboard({
       return isHC
         ? 'bg-[#f5793a] text-white hover:bg-[#e06828]'
         : isDark
-        ? 'bg-[#538d4e] text-white hover:bg-[#467842]'
-        : 'bg-[#6aaa64] text-white hover:bg-[#5b9556]';
+        ? 'bg-[#538d4e] text-white hover:bg-[#477a43]'
+        : 'bg-[#6aaa64] text-white hover:bg-[#5b9456]';
     }
 
     if (status === 'present') {
       return isHC
-        ? 'bg-[#85c0f9] text-black hover:bg-[#70aee8]'
+        ? 'bg-[#85c0f9] text-black hover:bg-[#72b1ee]'
         : isDark
         ? 'bg-[#b59f3b] text-white hover:bg-[#9d8a32]'
-        : 'bg-[#c9b458] text-white hover:bg-[#b09d4c]';
+        : 'bg-[#c9b458] text-white hover:bg-[#b5a24b]';
     }
 
     if (status === 'absent') {
       return isDark
         ? 'bg-[#3a3a3c] text-zinc-400 opacity-60'
-        : 'bg-[#787c7e] text-zinc-200 opacity-70';
+        : 'bg-[#787c7e] text-zinc-100 opacity-70';
     }
 
-    // Default key color
+    // Default untested key
     return isDark
       ? 'bg-[#818384] text-white hover:bg-[#999b9c]'
-      : 'bg-[#d3d6da] text-zinc-900 hover:bg-[#c2c5c9]';
+      : 'bg-[#d3d6da] text-zinc-900 hover:bg-[#c4c7cb]';
   };
 
   return (
@@ -84,7 +84,7 @@ export default function Keyboard({
                 onClick={() => handleKeyClick(key)}
                 disabled={disabled}
                 aria-label={key === 'BACKSPACE' ? 'Backspace' : key}
-                className={`h-11 sm:h-14 rounded-md font-bold text-xs sm:text-sm md:text-base flex items-center justify-center transition-all active:scale-95 duration-100 touch-manipulation shadow-sm cursor-pointer ${
+                className={`h-12 sm:h-14 rounded-[4px] font-bold text-xs sm:text-sm md:text-base flex items-center justify-center transition-all duration-300 active:scale-95 touch-manipulation cursor-pointer shadow-sm ${
                   isSpecial ? 'flex-[1.5] text-[10px] sm:text-xs tracking-wider' : 'flex-1'
                 } ${colorClass} ${disabled ? 'cursor-not-allowed opacity-80' : ''}`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}

@@ -58,7 +58,7 @@ export default function Board({
     rows.push(
       <div
         key={r}
-        className={`grid gap-1 sm:gap-1.5 w-full ${isShaking ? 'animate-shake-row' : ''}`}
+        className={`grid gap-1 sm:gap-1.5 w-full ${isShaking ? 'animate-shake' : ''}`}
         style={{
           gridTemplateColumns: `repeat(${wordLength}, minmax(0, 1fr))`,
         }}
@@ -68,20 +68,20 @@ export default function Board({
     );
   }
 
-  // Adjust max width based on word length so tiles don't get awkwardly stretched
+  // Adjust max width based on word length for proportional squares
   const getMaxWidthClass = () => {
     switch (wordLength) {
-      case 4: return 'max-w-[260px] sm:max-w-[280px]';
-      case 5: return 'max-w-[310px] sm:max-w-[340px]';
-      case 6: return 'max-w-[360px] sm:max-w-[390px]';
-      case 7: return 'max-w-[400px] sm:max-w-[430px]';
-      case 8: return 'max-w-[440px] sm:max-w-[470px]';
-      default: return 'max-w-[340px]';
+      case 4: return 'max-w-[240px] sm:max-w-[270px]';
+      case 5: return 'max-w-[290px] sm:max-w-[330px]';
+      case 6: return 'max-w-[340px] sm:max-w-[380px]';
+      case 7: return 'max-w-[390px] sm:max-w-[430px]';
+      case 8: return 'max-w-[430px] sm:max-w-[470px]';
+      default: return 'max-w-[330px]';
     }
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-2 w-full min-h-0 overflow-hidden">
+    <div className="flex-1 flex items-center justify-center p-2 sm:p-3 w-full min-h-0 overflow-hidden">
       <div className={`w-full ${getMaxWidthClass()} flex flex-col gap-1 sm:gap-1.5 transition-all duration-300`}>
         {rows}
       </div>
