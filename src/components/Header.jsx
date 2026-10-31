@@ -29,6 +29,7 @@ export default function Header({
   onOpenHistory,
   onOpenSettings,
   onNewGame,
+  onHint,
   soundEnabled,
   toggleSound,
   onUpdateSetting,
